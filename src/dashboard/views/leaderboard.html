@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naura Leaderboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col items-center">
+    <div class="w-full max-w-4xl animate-fade-in-down">
+        
+        <!-- Header Leaderboard -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-4xl font-cyber font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]">
+                    <i class="fa-solid fa-trophy mr-3 text-yellow-400"></i>Hall of Fame
+                </h1>
+                <p class="text-gray-400 mt-2">Global Economy Richest Users</p>
+            </div>
+            <a href="/" class="bg-gray-800 hover:bg-gray-700 text-white px-5 py-2 rounded-xl transition border border-gray-600 shadow-lg">
+                <i class="fa-solid fa-arrow-left mr-2"></i>Back
+            </a>
+        </div>
+
+        <!-- Tabel Leaderboard -->
+        <div class="glass-card rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-900/80 text-gray-400 uppercase text-xs tracking-wider border-b border-white/10">
+                    <tr>
+                        <th class="px-6 py-5 text-center w-24">Rank</th>
+                        <th class="px-6 py-5">Discord ID</th>
+                        <th class="px-6 py-5 text-right">Net Worth</th>
+                        <th class="px-6 py-5 text-center">Tier</th>
+                    </tr>
+                </thead>
+                <!-- Data akan dimuat secara dinamis oleh JavaScript di bawah -->
+                <tbody id="leaderboard-body" class="text-sm md:text-base bg-gray-900/40">
+                    <tr>
+                        <td colspan="4" class="text-center py-10 text-gray-400">
+                            <i class="fa-solid fa-circle-notch fa-spin text-2xl text-pink-500 mb-3 block"></i>
+                            Memuat data dari database...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Script Pengambil Data API -->
+    <script>
+        async function loadLeaderboard() {
+            try {
+                // Mengambil data JSON dari endpoint API yang sudah kita buat di server.js
+                const res = await fetch('/api/leaderboard');
+                const users = await res.json();
+                
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = ''; // Bersihkan tulisan loading
+
+                users.forEach((u, index) => {
+                    // Logika Highlight 3 Besar
+                    let rankDisplay = index === 0 ? '<i class="fa-solid fa-medal text-yellow-400 text-3xl drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]"></i>' : 
+                                      index === 1 ? '<i class="fa-solid fa-medal text-gray-300 text-3xl drop-shadow-[0_0_8px_rgba(209,213,219,0.8)]"></i>' : 
+                                      index === 2 ? '<i class="fa-solid fa-medal text-orange-500 text-3xl drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]"></i>' : 
+                                      `<span class="text-gray-500 font-bold text-lg">#${index + 1}</span>`;
+                    
+                    let rowStyle = index === 0 ? 'bg-yellow-500/10 border-l-4 border-yellow-400' :
+                                   index === 1 ? 'bg-gray-400/10 border-l-4 border-gray-300' :
+                                   index === 2 ? 'bg-orange-500/10 border-l-4 border-orange-500' : 
+                                   'border-b border-gray-700/50 hover:bg-gray-700/30 border-l-4 border-transparent';
+
+                    let vipBadge = u.isPremium ? '<span class="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs px-3 py-1 rounded-full font-bold shadow-lg"><i class="fa-solid fa-crown mr-1"></i> VIP</span>' : '<span class="text-gray-500 bg-gray-800 px-3 py-1 rounded-full text-xs">Member</span>';
+
+                    // Buat elemen baris tabel (TR)
+                    const tr = document.createElement('tr');
+                    tr.className = `${rowStyle} transition duration-200`;
+                    tr.innerHTML = `
+                        <td class="px-6 py-5 text-center">${rankDisplay}</td>
+                        <td class="px-6 py-5 font-mono text-gray-300"><i class="fa-solid fa-user-astronaut text-gray-600 mr-3"></i>${u.userId}</td>
+                        <td class="px-6 py-5 text-right font-cyber font-bold text-emerald-400">Rp ${u.economy_wallet.toLocaleString('id-ID')}</td>
+                        <td class="px-6 py-5 text-center">${vipBadge}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error('Error fetching leaderboard:', err);
+                document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="4" class="text-center py-8 text-red-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Gagal memuat data leaderboard.</td></tr>';
+            }
+        }
+
+        // Jalankan fungsi saat halaman dimuat
+        loadLeaderboard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcomer Editor | Naura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .toggle-checkbox:checked { right: 0; border-color: #ec4899; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #ec4899; }
+        .toggle-checkbox { right: 0; z-index: 1; border-color: #4b5563; transition: all 0.3s; }
+        .toggle-label { width: 3rem; height: 1.5rem; background-color: #4b5563; border-radius: 9999px; transition: all 0.3s; }
+        
+        /* CSS Khusus Preview Kartu Welcome */
+        .welcome-card {
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex items-center justify-center animate-fade-in-down">
+    <div class="w-full max-w-6xl glass-card rounded-3xl p-6 md:p-10 border border-pink-500/20 shadow-[0_0_40px_rgba(236,72,153,0.1)]">
+        
+        <div class="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
+            <h1 class="text-3xl font-bold text-white"><i class="fa-solid fa-image-portrait text-pink-500 mr-3"></i>Visual Welcomer Editor</h1>
+            <a href="/" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-xmark text-2xl"></i></a>
+        </div>
+
+        <div id="alertBox" class="hidden mb-6 p-4 rounded-xl font-bold text-sm flex items-center gap-3 transition-all"></div>
+
+        <!-- Grid 2 Kolom: Kiri (Form), Kanan (Live Preview) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            
+            <!-- KOLOM KIRI: FORMULIR -->
+            <form id="welcomerForm" class="space-y-5">
+                
+                <div class="bg-gray-900/50 p-5 rounded-2xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <p class="text-white font-bold"><i class="fa-solid fa-power-off text-green-400 mr-2"></i>Aktifkan Welcomer</p>
+                        <p class="text-xs text-gray-500 mt-1">Kirim kartu sambutan saat ada member baru</p>
+                    </div>
+                    <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="enabled" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="enabled" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900/50 p-5 rounded-2xl border border-white/5">
+                    <label class="block text-gray-300 font-semibold mb-2 text-sm">Guild ID (Server)</label>
+                    <input type="text" id="guildId" required class="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 text-white focus:border-pink-500 focus:outline-none transition">
+                </div>
+
+                <div class="bg-gray-900/50 p-5 rounded-2xl border border-white/5">
+                    <label class="block text-gray-300 font-semibold mb-2 text-sm">Channel ID (Tempat Kirim Sambutan)</label>
+                    <input type="text" id="channelId" class="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 text-white focus:border-pink-500 focus:outline-none transition">
+                </div>
+
+                <div class="bg-gray-900/50 p-5 rounded-2xl border border-white/5">
+                    <label class="block text-gray-300 font-semibold mb-2 text-sm">Background URL (JPG/PNG)</label>
+                    <input type="url" id="backgroundUrl" class="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 text-white focus:border-pink-500 focus:outline-none transition" placeholder="https://contoh.com/gambar.png">
+                </div>
+
+                <div class="bg-gray-900/50 p-5 rounded-2xl border border-white/5">
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-gray-300 font-semibold text-sm">Teks Sambutan</label>
+                        <span class="text-xs text-pink-400 font-mono">{user} {server} {memberCount}</span>
+                    </div>
+                    <textarea id="message" rows="3" class="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 text-white focus:border-pink-500 focus:outline-none transition" placeholder="Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}."></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold py-4 rounded-2xl shadow-[0_5px_20px_rgba(236,72,153,0.3)] transition transform hover:-translate-y-1">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Desain
+                </button>
+            </form>
+
+            <!-- KOLOM KANAN: LIVE PREVIEW -->
+            <div class="flex flex-col gap-4">
+                <h3 class="text-gray-400 font-bold uppercase tracking-widest text-sm mb-2"><i class="fa-solid fa-eye text-pink-400 mr-2"></i>Live Preview</h3>
+                
+                <!-- Discord Message Mockup -->
+                <div class="bg-[#313338] rounded-xl p-4 shadow-xl border border-gray-700">
+                    <div class="flex items-start gap-4">
+                        <img src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-10 h-10 rounded-full" alt="Bot Avatar">
+                        <div class="w-full">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-bold text-white">Naura Hoshino</span>
+                                <span class="bg-[#5865F2] text-white text-[10px] px-1.5 rounded font-bold">BOT</span>
+                                <span class="text-xs text-gray-400">Hari ini 12:00</span>
+                            </div>
+                            
+                            <!-- Dynamic Text Preview -->
+                            <p id="previewText" class="text-gray-300 text-sm mb-3 whitespace-pre-wrap">Halo <span class="text-[#5865F2] bg-[#5865F2]/20 px-1 rounded">@NewMember</span>, selamat datang di Server Kami! Kamu adalah member ke-1,234.</p>
+                            
+                            <!-- Dynamic Image Card Preview -->
+                            <div id="previewCard" class="welcome-card w-full max-w-md h-48 rounded-xl border border-gray-600 shadow-lg flex items-center justify-center" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop');">
+                                <div class="welcome-overlay absolute inset-0 flex flex-col items-center justify-center p-4">
+                                    <img src="https://cdn.discordapp.com/embed/avatars/1.png" class="w-20 h-20 rounded-full border-4 border-pink-400 mb-3 shadow-[0_0_15px_rgba(236,72,153,0.8)]" alt="User Avatar">
+                                    <h2 class="text-2xl font-black text-white drop-shadow-md font-cyber tracking-wider">WELCOME</h2>
+                                    <p class="text-pink-300 font-bold text-sm bg-black/50 px-3 py-0.5 rounded-full mt-1">Member #1,234</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 text-center mt-4"><i class="fa-solid fa-circle-info mr-1"></i>Tampilan ini adalah simulasi. Hasil asli yang dikirim bot mungkin sedikit berbeda tergantung Canvas.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIKA LIVE PREVIEW ---
+        const messageInput = document.getElementById('message');
+        const bgInput = document.getElementById('backgroundUrl');
+        const previewText = document.getElementById('previewText');
+        const previewCard = document.getElementById('previewCard');
+
+        // Update teks real-time
+        messageInput.addEventListener('input', (e) => {
+            let text = e.target.value || "Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}.";
+            // Ganti variabel dengan teks tiruan
+            text = text.replace(/{user}/g, '<span class="text-[#5865F2] bg-[#5865F2]/20 px-1 rounded">@NewMember</span>')
+                       .replace(/{server}/g, '<strong>Server Kami</strong>')
+                       .replace(/{memberCount}/g, '<strong>1,234</strong>');
+            previewText.innerHTML = text;
+        });
+
+        // Update background gambar real-time
+        bgInput.addEventListener('input', (e) => {
+            const url = e.target.value || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop";
+            previewCard.style.backgroundImage = `url('${url}')`;
+        });
+
+        // --- LOGIKA SUBMIT FORM ---
+        document.getElementById('welcomerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const alertBox = document.getElementById('alertBox');
+            
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Menyimpan...';
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            
+            const payload = {
+                guildId: document.getElementById('guildId').value,
+                enabled: document.getElementById('enabled').checked,
+                channelId: document.getElementById('channelId').value,
+                backgroundUrl: document.getElementById('backgroundUrl').value,
+                message: document.getElementById('message').value
+            };
+
+            try {
+                const response = await fetch('/api/welcomer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                alertBox.classList.remove('hidden', 'bg-red-500/20', 'text-red-400', 'border-red-500/50');
+                alertBox.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border', 'border-emerald-500/50');
+                alertBox.innerHTML = '<i class="fa-solid fa-check-circle text-xl"></i> ' + (result.message || 'Desain Welcomer berhasil disimpan!');
+            } catch (err) {
+                alertBox.classList.remove('hidden', 'bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/50');
+                alertBox.classList.add('bg-red-500/20', 'text-red-400', 'border', 'border-red-500/50');
+                alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-xl"></i> Gagal menyimpan pengaturan.';
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Desain';
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
+        });
+    </script>
+</body>
+</html>
